@@ -14,9 +14,12 @@ import {
     useCameraFormat,
 } from 'react-native-vision-camera';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import axios from 'axios';
 const CameraScreen = () => {
     const camera = useRef<Camera | null>(null);
     const [switchCameraValue, setSwitchCameraValue] = useState<any>('front');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
     const [flash, setFlash] = useState<'on' | 'off'>('off');
     const [showBorder, setShowBorder] = useState(false);
     const [saveError, setSaveError] = useState<any>(null);
@@ -72,6 +75,28 @@ const CameraScreen = () => {
         </View>
     );
 
+    const handleUpload = async () => {
+        if (!selectedFile) return;
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const response = await axios.post("http://localhost:8000/face-detection", formData, {
+                responseType: 'blob',
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                },
+            });
+            const imageBlob = new Blob([response.data], { type: 'image/png',lastModified: Date.now() });
+            const imageObjectURL = URL.createObjectURL(imageBlob);
+        } catch (error) {
+            console.error('Error uplaoding file', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     const capturePhoto = async () => {
         if (camera.current !== null) {
             try {
@@ -96,6 +121,7 @@ const CameraScreen = () => {
                     //     type: 'photo',
                     //     album: 'MyAppPhotos',
                     // });
+
                     console.log('Photo saved successfully!');
                     setShowBorder(true);
                     setTimeout(() => setShowBorder(false), 1000);
