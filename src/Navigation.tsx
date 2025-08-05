@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import WalletScreen from './screens/WalletScreen';
 import CameraScreen from './screens/CameraScreen';
-import ProfileScreen from './ProfileScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
