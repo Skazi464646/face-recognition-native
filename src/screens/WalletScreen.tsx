@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   StatusBar,
   StyleSheet,
@@ -10,92 +10,201 @@ import {
   Alert,
   ScrollView,
   Dimensions,
-  Animated,
-  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useWalletPay } from '../../hooks/useWalletFunctions';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 const {width} = Dimensions.get('window');
 function WalletScreen() {
-      const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === 'dark';
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
+  
+  // Reanimated shared values for high-performance animations
+  const fabScale = useSharedValue(1);
+  const fabSlide = useSharedValue(0);
+  const fabRotation = useSharedValue(0);
+  const headerOpacity = useSharedValue(0);
+  const headerTranslateY = useSharedValue(50);
+  const contentScale = useSharedValue(0.95);
+  const contentOpacity = useSharedValue(0);
+  
   const {
     cards,
     selectedCard,
     transactions,
     isProcessing,
-    fadeAnim,
-    slideAnim,
-    scaleAnim,
     processingScale,
     processingOpacity,
-    addCard,
     handleCardPress,
-    processPayment,
     getCardIcon,
     getStatusColor,
   } = useWalletPay();
-    return (
+
+  // Entrance animations
+  useEffect(() => {
+    headerOpacity.value = withSpring(1, { damping: 15, stiffness: 100 });
+    headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 100 });
+    contentOpacity.value = withTiming(1, { duration: 800 });
+    contentScale.value = withSpring(1, { damping: 15, stiffness: 100 });
+  }, [headerOpacity, headerTranslateY, contentOpacity, contentScale]);
+
+  const handleFABPress = () => {
+    // High-performance FAB animation with worklets
+    fabScale.value = withSpring(1.2, { damping: 10, stiffness: 200 });
+    fabSlide.value = withTiming(-60, { duration: 300 });
+    fabRotation.value = withTiming(180, { duration: 300 });
+    
+    // Navigate after animation
+    setTimeout(() => {
+      navigation.navigate('Wealth');
+      
+      // Reset animations
+      fabScale.value = withSpring(1, { damping: 15, stiffness: 100 });
+      fabSlide.value = withTiming(0, { duration: 300 });
+      fabRotation.value = withTiming(0, { duration: 300 });
+    }, 300);
+  };
+
+  // Animated styles using Reanimated worklets
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: headerOpacity.value,
+      transform: [{ translateY: headerTranslateY.value }],
+    };
+  });
+
+  const contentAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: contentOpacity.value,
+      transform: [{ scale: contentScale.value }],
+    };
+  });
+
+  const fabAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: fabScale.value },
+        { translateX: fabSlide.value },
+        { rotate: `${fabRotation.value}deg` },
+      ],
+    };
+  });
+
+  const processingAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: processingOpacity.value,
+      transform: [{ scale: processingScale.value }],
+    };
+  });
+
+  return (
         <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1f2937' : '#f8fafc' }]}>
             <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
-            {/* Animated Header */}
+            {/* Banking Home Header */}
             <Animated.View
                 style={[
-                    styles.headerContainer,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }],
-                    },
+                    styles.bankingHeader,
+                    headerAnimatedStyle,
+                    { paddingTop: insets.top + 10 },
                 ]}
             >
                 <LinearGradient
-                    colors={['#3b82f6', '#1d4ed8']}
-                    style={styles.header}
+                    colors={['#f8fafc', '#e0e7ff']}
+                    style={styles.headerGradient}
                 >
-                    <Text style={styles.headerTitle}>Wallet</Text>
-                    <Text style={styles.headerSubtitle}>Secure NFC Payments</Text>
+                    {/* Top Row - Time and Icons */}
+                    <View style={styles.headerTopRow}>
+                        <View style={styles.timeSection}>
+                            <Text style={styles.timeText}>7:28</Text>
+                            <TouchableOpacity style={styles.bellIcon}>
+                                <Icon name="notifications" size={16} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.headerIcons}>
+                            <TouchableOpacity style={styles.headerIconButton}>
+                                <Icon name="visibility" size={20} color="#6b7280" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.headerIconButton}>
+                                <Icon name="search" size={20} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Profile and Welcome */}
+                    <View style={styles.profileSection}>
+                        <TouchableOpacity style={styles.profileAvatar}>
+                            <Icon name="person" size={24} color="#6b7280" />
+                            <View style={styles.settingsIcon}>
+                                <Icon name="settings" size={12} color="#6b7280" />
+                            </View>
+                        </TouchableOpacity>
+                        <View style={styles.welcomeText}>
+                            <Text style={styles.welcomeTitle}>Good morning!</Text>
+                            <Text style={styles.welcomeSubtitle}>Welcome back, John</Text>
+                        </View>
+                    </View>
                 </LinearGradient>
             </Animated.View>
 
             <Animated.ScrollView
                 style={[
                     styles.content,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ scale: scaleAnim }],
-                    },
+                    contentAnimatedStyle,
                 ]}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Cards Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#f9fafb' : '#111827' }]}>
-                            Your Card
-                        </Text>
-                        <TouchableOpacity onPress={addCard} style={styles.addButton}>
-                            <Icon name="add" size={20} color="#3b82f6" />
-                        </TouchableOpacity>
+                        <View style={styles.sectionTitleRow}>
+                            <Icon name="credit-card" size={20} color="#3b82f6" />
+                            <Text style={[styles.sectionTitle, { color: isDarkMode ? '#f9fafb' : '#111827' }]}>
+                                CARDS
+                            </Text>
+                            <Icon name="chevron-double-right" size={16} color="#6b7280" />
+                        </View>
+                    </View>
+                    
+                    {/* Balance Display */}
+                    <View style={styles.balanceContainer}>
+                        <Text style={styles.balanceAmount}>5,749.08</Text>
+                        <Text style={styles.balanceCurrency}>AED</Text>
+                    </View>
+                    
+                    {/* Progress Bar */}
+                    <View style={styles.progressContainer}>
+                        <View style={styles.progressBar}>
+                            <View style={[styles.progressFill, { width: '85%' }]} />
+                        </View>
+                    </View>
+                    
+                    {/* Limit Information */}
+                    <View style={styles.limitInfo}>
+                        <Text style={styles.limitLabel}>Available limit</Text>
+                        <Text style={styles.limitAmount}>-749.08 AED</Text>
                     </View>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cardsContainer}>
-                        {cards.map((card, index) => (
+                        {cards.map((card, _index) => (
                             <Animated.View
                                 key={card.id}
-                                style={{
-                                    opacity: fadeAnim,
-                                    transform: [
-                                        { translateX: slideAnim },
-                                        { scale: scaleAnim },
-                                    ],
-                                }}
+                                style={contentAnimatedStyle}
                             >
                                 <TouchableOpacity
                                     onPress={() => handleCardPress(card)}
                                     style={[
-                                        styles.card,
+                                        styles.enhancedCard,
                                         {
                                             backgroundColor: card.color,
                                             borderColor: selectedCard?.id === card.id ? '#3b82f6' : 'transparent',
@@ -107,71 +216,70 @@ function WalletScreen() {
                                         <Icon name={getCardIcon(card.type)} size={24} color="#fff" />
                                         <Text style={styles.cardType}>{card.type.toUpperCase()}</Text>
                                     </View>
+                                    
                                     <Text style={styles.cardNumber}>{card.number}</Text>
                                     <Text style={styles.cardName}>{card.name}</Text>
-                                    <Text style={styles.cardBalance}>${card.balance.toFixed(2)}</Text>
+                                    
+                                    <View style={styles.cardBalanceSection}>
+                                        <Text style={styles.cardBalanceLabel}>Available Balance</Text>
+                                        <Text style={styles.cardBalance}>${card.balance.toFixed(2)}</Text>
+                                    </View>
+                                    
+                                    <View style={styles.creditLimitSection}>
+                                        <View style={styles.limitRow}>
+                                            <Text style={styles.limitLabel}>Credit Limit</Text>
+                                            <Text style={styles.limitAmount}>$10,000</Text>
+                                        </View>
+                                        <View style={styles.progressContainer}>
+                                            <View style={styles.progressBar}>
+                                                <View 
+                                                    style={[
+                                                        styles.progressFill, 
+                                                        { width: `${Math.min((card.balance / 10000) * 100, 100)}%` }
+                                                    ]} 
+                                                />
+                                            </View>
+                                            <Text style={styles.availableCredit}>
+                                                ${(10000 - card.balance).toFixed(2)} available
+                                            </Text>
+                                        </View>
+                                    </View>
                                 </TouchableOpacity>
                             </Animated.View>
                         ))}
                     </ScrollView>
                 </View>
 
-                {/* Quick Payment Section */}
+                {/* Info Blocks */}
+                <View style={styles.section}>
+                    <Text style={styles.infoText}>NO NEW ACTIVITY FOR REVIEW</Text>
+                    <View style={styles.infoDivider} />
+                    <Text style={styles.infoText}>NO NEW MESSAGES FOR YOU</Text>
+                </View>
+
+                {/* Quick Actions */}
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: isDarkMode ? '#f9fafb' : '#111827' }]}>
-                        Quick Payment
+                        QUICK ACTIONS
                     </Text>
-
-                    <View style={styles.quickPaymentGrid}>
+                    
+                    <View style={styles.quickActionsGrid}>
                         {[
-                            { name: 'Coffee', amount: 4.50, icon: 'local-cafe' },
-                            { name: 'Lunch', amount: 15.99, icon: 'restaurant' },
-                            { name: 'Gas', amount: 45.00, icon: 'local-gas-station' },
-                            { name: 'Custom', amount: 0, icon: 'edit' },
-                        ].map((item, index) => (
+                            { name: 'Bill', icon: 'receipt', action: () => Alert.alert('Bill') },
+                            { name: 'Raise', icon: 'chat-bubble', action: () => Alert.alert('Raise') },
+                            { name: 'Deals', icon: 'local-offer', action: () => Alert.alert('Deals') },
+                        ].map((action, _index) => (
                             <Animated.View
-                                key={index}
-                                style={{
-                                    opacity: fadeAnim,
-                                    transform: [
-                                        { translateY: slideAnim },
-                                        { scale: scaleAnim },
-                                    ],
-                                }}
+                                key={_index}
+                                style={contentAnimatedStyle}
                             >
                                 <TouchableOpacity
-                                    style={[styles.quickPaymentItem, { backgroundColor: isDarkMode ? '#374151' : '#fff' }]}
-                                    onPress={() => {
-                                        if (item.name === 'Custom') {
-                                            Alert.prompt(
-                                                'Custom Payment',
-                                                'Enter amount:',
-                                                [
-                                                    { text: 'Cancel', style: 'cancel' },
-                                                    {
-                                                        text: 'Pay',
-                                                        onPress: (amount: string | undefined) => {
-                                                            if (amount && !isNaN(Number(amount))) {
-                                                                processPayment(Number(amount), 'Custom Payment');
-                                                            }
-                                                        },
-                                                    },
-                                                ],
-                                                'plain-text',
-                                                '0'
-                                            );
-                                        } else {
-                                            processPayment(item.amount, item.name);
-                                        }
-                                    }}
-                                    disabled={isProcessing}
+                                    style={styles.quickActionItem}
+                                    onPress={action.action}
                                 >
-                                    <Icon name={item.icon} size={32} color="#3b82f6" />
-                                    <Text style={[styles.quickPaymentText, { color: isDarkMode ? '#e5e7eb' : '#374151' }]}>
-                                        {item.name}
-                                    </Text>
-                                    <Text style={styles.quickPaymentAmount}>
-                                        ${item.amount > 0 ? item.amount.toFixed(2) : 'Custom'}
+                                    <Icon name={action.icon} size={32} color="#3b82f6" />
+                                    <Text style={[styles.quickActionText, { color: isDarkMode ? '#e5e7eb' : '#374151' }]}>
+                                        {action.name}
                                     </Text>
                                 </TouchableOpacity>
                             </Animated.View>
@@ -185,16 +293,10 @@ function WalletScreen() {
                         Recent Transactions
                     </Text>
 
-                    {transactions.slice(0, 5).map((transaction, index) => (
+                    {transactions.slice(0, 5).map((transaction, _index) => (
                         <Animated.View
                             key={transaction.id}
-                            style={{
-                                opacity: fadeAnim,
-                                transform: [
-                                    { translateX: slideAnim },
-                                    { scale: scaleAnim },
-                                ],
-                            }}
+                            style={contentAnimatedStyle}
                         >
                             <View
                                 style={[styles.transactionItem, { backgroundColor: isDarkMode ? '#374151' : '#fff' }]}
@@ -232,10 +334,7 @@ function WalletScreen() {
             <Animated.View
                 style={[
                     styles.processingOverlay,
-                    {
-                        opacity: processingOpacity,
-                        transform: [{ scale: processingScale }],
-                    },
+                    processingAnimatedStyle,
                 ]}
                 pointerEvents={isProcessing ? 'auto' : 'none'}
             >
@@ -245,6 +344,22 @@ function WalletScreen() {
                     <Text style={styles.processingSubtext}>Hold your device near the terminal</Text>
                 </View>
             </Animated.View>
+
+            {/* Floating Action Button */}
+            <Animated.View
+                style={[
+                    styles.fab,
+                    fabAnimatedStyle,
+                ]}
+            >
+                <TouchableOpacity
+                    style={styles.fabButton}
+                    onPress={handleFABPress}
+                    activeOpacity={0.8}
+                >
+                    <Icon name="chevron-double-left" size={24} color="#fff" />
+                </TouchableOpacity>
+            </Animated.View>
         </SafeAreaView>
     );
 }
@@ -253,24 +368,88 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerContainer: {
-    
+  bankingHeader: {
+    zIndex: 10,
   },
-  header: {
-    paddingTop: 20,
-    paddingBottom: 30,
+  headerGradient: {
     paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  timeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  timeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bellIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  headerIconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileSection: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
+  profileAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    position: 'relative',
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#0909d4ff',
+  settingsIcon: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  welcomeText: {
+    flex: 1,
+  },
+  welcomeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
   },
   content: {
     flex: 1,
@@ -284,6 +463,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 20,
@@ -315,6 +499,157 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+  },
+  enhancedCard: {
+    width: width * 0.75,
+    height: 220,
+    borderRadius: 16,
+    padding: 20,
+    marginRight: 15,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  cardBalanceSection: {
+    marginTop: 10,
+  },
+  cardBalanceLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  creditLimitSection: {
+    marginTop: 10,
+  },
+  limitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  limitLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+  },
+  limitAmount: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  progressContainer: {
+    marginTop: 4,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#3b82f6',
+    borderRadius: 2,
+  },
+  availableCredit: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 10,
+  },
+  balanceContainer: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  balanceCurrency: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  limitInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 100,
+    zIndex: 1000,
+  },
+  fabButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  infoBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+  infoDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 8,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+  },
+  quickActionItem: {
+    width: (width - 80) / 3,
+    height: 80,
+    borderRadius: 12,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f9fafb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
   },
   cardHeader: {
     flexDirection: 'row',

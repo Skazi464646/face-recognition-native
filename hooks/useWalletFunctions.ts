@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { Alert, Platform, Animated } from 'react-native';
+import { useState, useEffect } from 'react';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 
 export interface Card {
   id: string;
@@ -26,37 +27,13 @@ export function useWalletPay() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const processingScale = useRef(new Animated.Value(0)).current;
-  const processingOpacity = useRef(new Animated.Value(0)).current;
+  // Animation values - using Reanimated shared values
+  const processingScale = useSharedValue(0);
+  const processingOpacity = useSharedValue(0);
 
   useEffect(() => {
     loadData();
-    startEntranceAnimations();
   }, []);
-
-  const startEntranceAnimations = () => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
   const triggerHaptic = () => {
     if (Platform.OS === 'ios') {
@@ -128,18 +105,8 @@ export function useWalletPay() {
     }
     setIsProcessing(true);
     triggerHaptic();
-    Animated.parallel([
-      Animated.timing(processingOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(processingScale, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    processingOpacity.value = withTiming(1, { duration: 300 });
+    processingScale.value = withTiming(1, { duration: 300 });
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       const newTransaction: Transaction = {
@@ -160,21 +127,12 @@ export function useWalletPay() {
       );
       setCards(updatedCards);
       await AsyncStorage.setItem('wallet_cards', JSON.stringify(updatedCards));
-      Animated.parallel([
-        Animated.timing(processingOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(processingScale, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
+      processingOpacity.value = withTiming(0, { duration: 300 });
+      processingScale.value = withTiming(0, { duration: 300 });
+      setTimeout(() => {
         setIsProcessing(false);
         Alert.alert('Success', `Payment of $${amount.toFixed(2)} to ${merchant} completed!`);
-      });
+      }, 300);
     } catch (error) {
       console.log('Payment error:', error);
       Alert.alert('Error', 'Payment failed. Please try again.');
@@ -248,9 +206,6 @@ export function useWalletPay() {
     selectedCard,
     transactions,
     isProcessing,
-    fadeAnim,
-    slideAnim,
-    scaleAnim,
     processingScale,
     processingOpacity,
     addCard,

@@ -8,4 +8,4 @@ import { name as appName } from './app.json';
 import Navigation from './src/Navigation';
 
 
-AppRegistry.registerComponent(appName, () => Navigation);
+AppRegistry.registerComponent(appName, () => App);
