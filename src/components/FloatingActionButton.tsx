@@ -20,7 +20,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onPress,
   icon = 'chevron-double-left',
   size = 64,
-  color = '#667eea',
+  color = '#6366f1',
 }) => {
   // Reanimated shared values for high-performance animations
   const scale = useSharedValue(1);
@@ -68,7 +68,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#667eea', '#764ba2']}
+          colors={['#6366f1', '#8b5cf6']}
           style={styles.gradient}
         >
           <Icon name={icon} size={28} color="#fff" />
@@ -88,14 +88,14 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#667eea',
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 16,
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 20,
   },
   gradient: {
     width: '100%',

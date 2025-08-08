@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {/* Modern Header with Glass Effect */}
+      {/* Elegant Header Design */}
       <View style={styles.headerContent}>
         {/* Profile and Welcome Section */}
         <View style={styles.profileSection}>
@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
             onPress={onProfilePress}
           >
             <LinearGradient
-              colors={['#667eea', '#764ba2']}
+              colors={['#6366f1', '#8b5cf6']}
               style={styles.avatarGradient}
             >
               <Icon name="person" size={24} color="#fff" />
@@ -50,13 +50,13 @@ const Header: React.FC<HeaderProps> = ({
             style={styles.actionButton}
             onPress={onEyePress}
           >
-            <Icon name="visibility" size={20} color="#374151" />
+            <Icon name="visibility" size={20} color="#6366f1" />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={onSearchPress}
           >
-            <Icon name="search" size={20} color="#374151" />
+            <Icon name="search" size={20} color="#6366f1" />
           </TouchableOpacity>
         </View>
       </View>
@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 2,
     paddingVertical: 16,
     backgroundColor: 'transparent',
   },
@@ -74,17 +74,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
   },
   profileSection: {
     flexDirection: 'row',
@@ -101,14 +101,14 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#667eea',
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
   settingsIcon: {
     position: 'absolute',
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#374151',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   welcomeText: {
     flex: 1,
@@ -155,14 +155,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });
 

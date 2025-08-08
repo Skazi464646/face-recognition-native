@@ -29,7 +29,7 @@ const CardsSection: React.FC<CardsSectionProps> = ({
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
-            <Icon name="credit-card" size={24} color="#667eea" />
+            <Icon name="credit-card" size={24} color="#6366f1" />
             <Text style={styles.sectionTitle}>CARDS</Text>
             <Icon name="chevron-double-right" size={18} color="#6b7280" />
           </View>
@@ -45,7 +45,7 @@ const CardsSection: React.FC<CardsSectionProps> = ({
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
             <LinearGradient
-              colors={['#667eea', '#764ba2']}
+              colors={['#6366f1', '#8b5cf6']}
               style={[
                 styles.progressFill,
                 { width: `${progressPercentage}%` }
@@ -69,17 +69,17 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 28,
+    padding: 28,
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 10,
   },
   sectionHeader: {
     marginBottom: 20,
