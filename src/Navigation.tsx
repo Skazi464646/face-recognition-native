@@ -19,53 +19,52 @@ export default function Navigation() {
         <Tab.Navigator
           screenOptions={({ route }) => ({
             headerShown: false,
-            tabBarIcon: ({ color, size }) => {
+            tabBarIcon: ({ color, size, focused }) => {
               let name;
               switch (route.name) {
                 case 'Home':
-                  name = 'home';
+                  name = focused ? 'diamond' : 'home';
                   break;
-                case 'Wealth':
-                  name = 'bar-chart';
+                case 'Markets':
+                  name = 'show-chart';
                   break;
-                case 'Transfer':
-                  name = 'swap-vert';
+                case 'Trade':
+                  name = 'refresh';
                   break;
-                case 'Services':
-                  name = 'apps';
+                case 'Futures':
+                  name = 'description';
                   break;
-                case 'Explore':
-                  name = 'grid-on';
+                case 'Assets':
+                  name = 'account-balance-wallet';
                   break;
                 default:
                   name = 'home';
               }
               return <Icon name={name} size={size} color={color} />;
             },
-            tabBarActiveTintColor: '#667eea',
-            tabBarInactiveTintColor: '#9ca3af',
+            tabBarActiveTintColor: '#ffd700',
+            tabBarInactiveTintColor: '#666',
             tabBarStyle: {
-              backgroundColor: 'rgba(255, 255, 255, 0.98)',
-              borderTopWidth: 0,
-              paddingBottom: 12,
+              backgroundColor: '#0f0f23',
+              borderTopWidth: 1,
+              borderTopColor: 'rgba(255, 255, 255, 0.1)',
+              paddingBottom: 8,
               paddingTop: 8,
-              height: 70,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 12,
-              borderRadius: 20,
-              marginHorizontal: 16,
-              marginBottom: 8,
+              height: 88,
+            },
+            tabBarItemStyle: {
+              paddingVertical: 4,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
+              marginTop: 2,
             },
           })}
         >
           <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Wealth" component={CameraScreen} />
-          <Tab.Screen name="Transfer" component={ProfileScreen} />
-          <Tab.Screen name="Services" component={WalletScreen} />
-          <Tab.Screen name="Explore" component={CameraScreen} />
+          <Tab.Screen name="Markets" component={CameraScreen} />
+          <Tab.Screen name="Trade" component={ProfileScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

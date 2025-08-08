@@ -46,7 +46,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={['#667eea', '#764ba2']}
+              colors={['#6366f1', '#8b5cf6']}
               style={styles.actionGradient}
             >
               <Icon name={action.icon} size={28} color="#fff" />
@@ -77,16 +77,16 @@ const styles = StyleSheet.create({
   actionItem: {
     width: (width - 80) / 3,
     height: 100,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
   },
   actionGradient: {
     width: 48,

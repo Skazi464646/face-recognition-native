@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StatusBar,
   StyleSheet,
@@ -6,11 +6,15 @@ import {
   View,
   SafeAreaView,
   ScrollView,
+  Text,
+  TouchableOpacity,
+  TextInput,
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,22 +23,21 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Import custom components
-import Header from '../components/Header';
-import CardsSection from '../components/CardsSection';
-import InfoBlocks from '../components/InfoBlocks';
-import FloatingActionButton from '../components/FloatingActionButton';
-import QuickActions from '../components/QuickActions';
+
+import ExchangeView from './ExchangeView';
 
 const HomeScreen: React.FC = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
+  const [activeTab, setActiveTab] = useState('wealth');
+  const [selectedSegment, setSelectedSegment] = useState('exchange');
 
   // Reanimated shared values for entrance animations
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(50);
-  const contentOpacity = useSharedValue(0);
-  const contentScale = useSharedValue(0.95);
+  const contentRotation = useSharedValue(0);
+  const contentScale = useSharedValue(1);
 
   // Animated styles using worklets
   const headerAnimatedStyle = useAnimatedStyle(() => {
@@ -46,8 +49,11 @@ const HomeScreen: React.FC = () => {
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: contentOpacity.value,
-      transform: [{ scale: contentScale.value }],
+      transform: [
+        { rotateY: `${contentRotation.value}deg` },
+        { scale: contentScale.value },
+      ],
+      backfaceVisibility: 'hidden',
     };
   });
 
@@ -55,25 +61,18 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     headerOpacity.value = withSpring(1, { damping: 15, stiffness: 100 });
     headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 100 });
-    contentOpacity.value = withTiming(1, { duration: 800 });
-    contentScale.value = withSpring(1, { damping: 15, stiffness: 100 });
-  }, []);
+  }, [headerOpacity, headerTranslateY]);
+
+  // Handle segment change with simple content switch
+  const handleSegmentChange = (segment: string) => {
+    if (segment === selectedSegment) return; // Don't animate if same segment
+
+    setSelectedSegment(segment);
+  };
 
   // Event handlers
   const handleProfilePress = () => {
     Alert.alert('Profile', 'Profile settings');
-  };
-
-  const handleEyePress = () => {
-    Alert.alert('Visibility', 'Toggle visibility');
-  };
-
-  const handleSearchPress = () => {
-    Alert.alert('Search', 'Open search');
-  };
-
-  const handleCardsPress = () => {
-    Alert.alert('Cards', 'View all cards');
   };
 
   const handleFABPress = () => {
@@ -81,11 +80,15 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('Wealth');
   };
 
+  const handleTabPress = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   const handleQuickAction = (actionName: string) => {
     Alert.alert(actionName, `${actionName} action triggered`);
   };
 
-    return (
+  return (
     <SafeAreaView
       style={[
         styles.container,
@@ -98,70 +101,108 @@ const HomeScreen: React.FC = () => {
         translucent
       />
 
-      {/* Modern Background Gradient */}
+      {/* Dark Background */}
       <LinearGradient
-        colors={['#f8fafc', '#e0e7ff', '#f1f5f9']}
+        colors={['#0f0f23', '#1a1a2e', '#16213e']}
         style={styles.backgroundGradient}
       />
 
-      {/* Header with entrance animation */}
-      <Animated.View style={[headerAnimatedStyle, { paddingTop: insets.top + 10 }]}>
-        <Header
-          userName="John"
-          greeting="Good morning!"
-          onProfilePress={handleProfilePress}
-          onEyePress={handleEyePress}
-          onSearchPress={handleSearchPress}
-        />
+      {/* Crypto Exchange Header */}
+      <Animated.View style={[headerAnimatedStyle, { paddingTop: insets.top - 10 }]}>
+        <View style={styles.header}>
+          {/* Top Header Bar */}
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.headerButton}>
+              <Icon name="menu" size={24} color="#fff" />
+            </TouchableOpacity>
+
+
+
+            {/* Segment Control */}
+            <View style={styles.segmentControl}>
+              <TouchableOpacity
+                style={[
+                  styles.segmentButton,
+                  selectedSegment === 'exchange' && styles.segmentButtonActive
+                ]}
+                onPress={() => handleSegmentChange('exchange')}
+              >
+                <Text style={[
+                  styles.segmentText,
+                  selectedSegment === 'exchange' && styles.segmentTextActive
+                ]}>
+                  Exchange
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segmentButton,
+                  selectedSegment === 'wallet' && styles.segmentButtonActive
+                ]}
+                onPress={() => handleSegmentChange('wallet')}
+              >
+                <Text style={[
+                  styles.segmentText,
+                  selectedSegment === 'wallet' && styles.segmentTextActive
+                ]}>
+                  Wallet
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.headerRight}>
+
+              <TouchableOpacity style={styles.headerButton}>
+                <Icon name="person" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="#BTCUnbound"
+              placeholderTextColor="#666"
+            />
+            <TouchableOpacity style={styles.searchButton}>
+              <Icon name="search" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </Animated.View>
 
-      {/* Main Content with entrance animation */}
-      <Animated.ScrollView
-        style={[styles.content, contentAnimatedStyle]}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {/* Cards Section */}
-        <CardsSection
-          balance="5,749.08"
-          currency="AED"
-          progressPercentage={85}
-          availableLimit="-749.08 AED"
-          onPress={handleCardsPress}
-        />
-
-        {/* Info Blocks */}
-        <InfoBlocks />
-
-        {/* Quick Actions */}
-        <QuickActions
-          actions={[
-            {
-              name: 'Bill',
-              icon: 'receipt',
-              onPress: () => handleQuickAction('Bill'),
-            },
-            {
-              name: 'Raise',
-              icon: 'chat-bubble',
-              onPress: () => handleQuickAction('Raise'),
-            },
-            {
-              name: 'Deals',
-              icon: 'local-offer',
-              onPress: () => handleQuickAction('Deals'),
-            },
-          ]}
-        />
-      </Animated.ScrollView>
-
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        onPress={handleFABPress}
-        icon="chevron-double-left"
-        size={56}
-        color="#3b82f6"
-      />
+      {/* Main Content with Flip Animation */}
+      <Animated.View style={[styles.contentContainer, contentAnimatedStyle]}>
+        {selectedSegment === 'exchange' ? (
+          <ExchangeView />
+        ) : (
+          <View style={styles.walletContainer}>
+            {/* Wallet Limit Card */}
+            <View style={styles.limitCard}>
+              <View style={styles.limitHeader}>
+                <Text style={styles.limitTitle}>Daily Limit</Text>
+                <Icon name="info" size={20} color="#ffd700" />
+              </View>
+              <Text style={styles.limitAmount}>$ 10,000</Text>
+              <View style={styles.limitProgress}>
+                <View style={styles.progressBar}>
+                  <View style={styles.progressFill} />
+                </View>
+                <Text style={styles.limitUsed}>$ 2,450 used today</Text>
+              </View>
+              <View style={styles.limitActions}>
+                <TouchableOpacity style={styles.limitButton}>
+                  <Text style={styles.limitButtonText}>Increase Limit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.limitButtonSecondary}>
+                  <Text style={styles.limitButtonTextSecondary}>View History</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -181,8 +222,176 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 100, // Space for FAB
+    paddingHorizontal: 10,
+    paddingBottom: 120,
+    paddingTop: 0,
+  },
+  // Header Styles
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: 0,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationContainer: {
+    position: 'relative',
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ffd700',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  segmentControl: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    padding: 4,
+  },
+  segmentButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  segmentButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  segmentText: {
+    fontSize: 14,
+    color: '#999',
+    fontWeight: '500',
+  },
+  segmentTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
+    paddingVertical: 8,
+  },
+  searchButton: {
+    padding: 4,
+  },
+
+  walletContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  limitCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+  },
+  limitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  limitTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  limitAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#ffd700',
+    marginBottom: 16,
+  },
+  limitProgress: {
+    marginBottom: 20,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    width: '24.5%', // $2,450 / $10,000 = 24.5%
+    backgroundColor: '#ffd700',
+    borderRadius: 4,
+  },
+  limitUsed: {
+    fontSize: 14,
+    color: '#999',
+  },
+  limitActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  limitButton: {
+    flex: 1,
+    backgroundColor: '#ffd700',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  limitButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  limitButtonSecondary: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  limitButtonTextSecondary: {
+    color: '#fff',
+    fontWeight: '500',
+    fontSize: 14,
   },
 });
 

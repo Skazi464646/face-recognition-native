@@ -1,260 +1,144 @@
+import React, { useMemo } from 'react';
+import { View, StatusBar, StyleSheet } from 'react-native';
+import { Camera } from 'react-native-vision-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
+
+// Custom hooks
+import { useCamera } from '../hooks/useCamera';
+import { useFaceRecognition } from '../hooks/useFaceRecognition';
+import { useAnimations } from '../hooks/useAnimations';
+import { useFaceDetection } from '../hooks/useFaceDetection';
+
+// Components
 import {
-    Linking,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    Platform,
-    PermissionsAndroid,
-} from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import {
-    Camera,
-    useCameraDevice,
-    useCameraFormat,
-} from 'react-native-vision-camera';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import axios from 'axios';
-const CameraScreen = () => {
-    const camera = useRef<Camera | null>(null);
-    const [switchCameraValue, setSwitchCameraValue] = useState<any>('front');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [flash, setFlash] = useState<'on' | 'off'>('off');
-    const [showBorder, setShowBorder] = useState(false);
-    const [saveError, setSaveError] = useState<any>(null);
-    const device = useCameraDevice(switchCameraValue);
-    const format = useCameraFormat(device, [{ photoHdr: true }, { videoHdr: true }]);
-    const supportsFlash = device?.hasFlash ?? false;
+  PermissionScreen,
+  CameraOverlay,
+  PhotoPreview,
+  styles as componentStyles,
+} from '../components/camera';
 
+const CameraScreen: React.FC = () => {
+  // Custom hooks
+  const cameraHook = useCamera();
+  const faceRecognitionHook = useFaceRecognition();
+  const faceDetectionHook = useFaceDetection();
+  const animationsHook = useAnimations(cameraHook.hasPermission, cameraHook.captureScale);
 
-    useEffect(() => {
-        async function getPermission() {
-            // Camera permission
-            const cameraPermission = await Camera.requestCameraPermission();
-            console.log(`Camera permission status: ${cameraPermission}`);
-            if (cameraPermission === 'denied') await Linking.openSettings();
+  // Memoized image URI
+  const imageUri = useMemo(() => {
+    if (!cameraHook.capturedPhoto) return null;
+    return cameraHook.capturedPhoto.startsWith('file://') 
+      ? cameraHook.capturedPhoto 
+      : `file://${cameraHook.capturedPhoto}`;
+  }, [cameraHook.capturedPhoto]);
 
-            // Request photo library permission for iOS
-            if (Platform.OS === 'ios') {
-                const photoLibraryPermission =
-                    await Camera.requestCameraPermission();
-                console.log(
-                    `Photo library permission status: ${photoLibraryPermission}`,
-                );
-                if (photoLibraryPermission === 'denied') await Linking.openSettings();
-            } else {
-                // For Android, request storage permission
-                try {
-                    const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                        {
-                            title: 'Storage Permission',
-                            message: 'App needs access to your storage to save photos',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        },
-                    );
-                    if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                        console.log('Storage permission denied');
-                    }
-                } catch (err) {
-                    console.warn(err);
-                }
-            }
-        }
-        getPermission();
-    }, []);
+  // Handler functions
+  const handleRetakePhoto = () => {
+    cameraHook.retakePhoto();
+    faceRecognitionHook.resetState();
+  };
 
-    if (device == null) return (
-        <View style={styles.loadingContainer}>
-            <Text style={{ color: 'white', marginTop: 40 }}>
-                Camera not available
-            </Text>
-        </View>
+  const handleRegisterSuccess = () => {
+    handleRetakePhoto();
+  };
+
+  const handleVerifySuccess = () => {
+    handleRetakePhoto();
+  };
+
+  const handleVerifyFailure = () => {
+    handleRetakePhoto();
+  };
+
+  const handleNameConfirm = () => {
+    if (!cameraHook.capturedPhoto) return;
+    faceRecognitionHook.handleNameConfirm(
+      cameraHook.capturedPhoto,
+      faceRecognitionHook.personName,
+      handleRegisterSuccess
     );
+  };
 
-    const handleUpload = async () => {
-        if (!selectedFile) return;
-        setLoading(true);
-        const formData = new FormData();
-        formData.append('file', selectedFile);
+  const handleVerifyPress = () => {
+    if (!cameraHook.capturedPhoto) return;
+    faceRecognitionHook.verifyFace(
+      cameraHook.capturedPhoto,
+      handleVerifySuccess,
+      handleVerifyFailure
+    );
+  };
 
-        try {
-            const response = await axios.post("http://localhost:8000/face-detection", formData, {
-                responseType: 'blob',
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-            });
-            const imageBlob = new Blob([response.data], { type: 'image/png',lastModified: Date.now() });
-            const imageObjectURL = URL.createObjectURL(imageBlob);
-        } catch (error) {
-            console.error('Error uplaoding file', error);
-        } finally {
-            setLoading(false);
-        }
-    }
+  // Permission screen
+  if (!cameraHook.hasPermission) {
+    return <PermissionScreen />;
+  }
 
-    const capturePhoto = async () => {
-        if (camera.current !== null) {
-            try {
-                const photo = await camera.current?.takePhoto({
-                    flash: switchCameraValue === 'back' ? flash : 'off',
-                });
-
-                // For iOS, we need to ensure the file URL is in the correct format
-                const photoPath =
-                    Platform.OS === 'ios'
-                        ? photo.path.replace('file://', '')
-                        : photo.path;
-
-                try {
-                    const file = await camera.current.takePhoto()
-                    const result = await fetch(`file://${file.path}`)
-                    const data = await result.blob();
-                    //TODO:- Save the photo to the python backend for face recognition
-
-                    //
-                    // await CameraRoll.save(`file://${photoPath}`, {
-                    //     type: 'photo',
-                    //     album: 'MyAppPhotos',
-                    // });
-
-                    console.log('Photo saved successfully!');
-                    setShowBorder(true);
-                    setTimeout(() => setShowBorder(false), 1000);
-                } catch (saveError) {
-                    console.log('Failed to save photo:', saveError);
-                    setSaveError('Failed to save photo. Please check permissions.');
-                    setTimeout(() => setSaveError(null), 3000);
-                }
-            } catch (error) {
-                console.error('Failed to take photo:', error);
-                setSaveError('Failed to capture photo. Please try again.');
-                setTimeout(() => setSaveError(null), 3000);
-            }
-        }
-    };
-
-
-
+  // Photo preview screen
+  if (cameraHook.showPreview && cameraHook.capturedPhoto) {
     return (
-        <SafeAreaProvider>
-            <View style={[styles.main, { borderWidth: showBorder ? 5 : 0 }]}>
-                <Camera
-                    ref={camera}
-                    style={StyleSheet.absoluteFill}
-                    device={device}
-                    isActive={true}
-                    photo={true}
-                    format={format}
-                />
-                <TouchableOpacity
-                    style={styles.touchButton}
-                    onPress={capturePhoto}>
-                    <View style={styles.iconHolder}>
-                        <Text style={{ color: 'white', fontSize: 18 }}>Capture</Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaProvider>
+      <PhotoPreview
+        imageUri={imageUri}
+        isLoading={faceRecognitionHook.isLoading}
+        loadingType={faceRecognitionHook.loadingType}
+        showNameInput={faceRecognitionHook.showNameInput}
+        personName={faceRecognitionHook.personName}
+        onRetakePhoto={handleRetakePhoto}
+        onRegisterPress={faceRecognitionHook.handleRegisterPress}
+        onVerifyPress={handleVerifyPress}
+        onPersonNameChange={faceRecognitionHook.setPersonName}
+        onNameConfirm={handleNameConfirm}
+        onNameCancel={() => faceRecognitionHook.setShowNameInput(false)}
+      />
     );
+  }
+
+  // Main camera screen
+  return (
+    <SafeAreaView style={componentStyles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
+      <View style={componentStyles.cameraContainer}>
+        {/* Camera View */}
+        {cameraHook.device && (
+          <Camera
+            ref={cameraHook.camera}
+            style={StyleSheet.absoluteFill}
+            device={cameraHook.device}
+            isActive={true}
+            photo={true}
+          />
+        )}
+
+        {/* Dark overlay for better contrast */}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)']}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Camera Overlay */}
+        <CameraOverlay
+          headerStyle={animationsHook.headerStyle}
+          frameStyle={animationsHook.frameStyle}
+          scanningStyle={animationsHook.scanningStyle}
+          buttonStyle={animationsHook.buttonStyle}
+          captureButtonStyle={animationsHook.captureButtonStyle}
+          isCapturing={cameraHook.isCapturing}
+          onCapturePress={cameraHook.capturePhoto}
+          instructionText={faceDetectionHook.instructionText}
+          instructionColor={faceDetectionHook.instructionColor}
+          frameColor={faceDetectionHook.frameColor}
+          instructionOpacity={faceDetectionHook.instructionOpacity}
+          frameOpacity={faceDetectionHook.frameOpacity}
+          isFaceDetected={faceDetectionHook.isFaceDetected}
+          detectionScore={faceDetectionHook.detectionScore}
+          onStartDetection={faceDetectionHook.simulateFaceDetection}
+        />
+      </View>
+    </SafeAreaView>
+  );
 };
 
-export default CameraScreen;
 
-const styles = StyleSheet.create({
-    main: {
-        flex: 1,
-        borderColor: 'green',
-    },
-    loadingContainer: {
-        flex: 1,
-        textAlign: 'center',
-        alignContent: 'center'
-        , alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'black',
-    },
-    touchButton: {
-        backgroundColor: 'red',
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        position: 'absolute',
-        bottom: 50,
-        alignSelf: 'center',
-        borderWidth: 2,
-        borderColor: 'white',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    iconHolder: {
-        borderRadius: 15,
-        overflow: 'hidden',
-        borderColor: 'blue',
-        alignItems: 'center',
-        position: 'absolute',
-        top: 20,
-        right: 10,
-    },
-    errorContainer: {
-        position: 'absolute',
-        bottom: 100,
-        alignSelf: 'center',
-        backgroundColor: 'red',
-        padding: 10,
-        borderRadius: 5,
-    },
-    errorText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    icon: {
-        borderWidth: 2,
-        width: 80,
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#000000',
-    },
-    recordingButtonDesign: {
-        width: '80%',
-        alignSelf: 'center',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 40,
-        position: 'absolute',
-        bottom: 50,
-    },
-    recordButton: {
-        width: 80,
-        backgroundColor: 'red',
-        height: 80,
-        borderRadius: 40,
-        alignSelf: 'center',
-        borderWidth: 2,
-        borderColor: 'white',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    timerView: {
-        borderWidth: 2,
-        width: 100,
-        padding: 10,
-        borderRadius: 5,
-        backgroundColor: 'green',
-        borderColor: 'green',
-        alignItems: 'center',
-        alignSelf: 'center',
-        marginTop: 10,
-    },
-    timerText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: 'white',
-    },
-});
+export default CameraScreen;
