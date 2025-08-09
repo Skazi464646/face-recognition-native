@@ -8,8 +8,8 @@ type Props = {
   showNameInput: boolean;
   personName: string;
   onRetakePhoto: () => void;
-  onRegisterPress: () => void;
-  onVerifyPress: () => void;
+  onRegisterPress: (imageUri:string) => void;
+  onVerifyPress: (imageUri:string) => void;
   onPersonNameChange: (text: string) => void;
   onNameConfirm: () => void;
   onNameCancel: () => void;
@@ -38,10 +38,10 @@ const PhotoPreview: React.FC<Props> = ({
         <TouchableOpacity onPress={onRetakePhoto} style={styles.button}>
           <Text style={styles.buttonText}>Retake</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onRegisterPress} style={styles.button}>
+        <TouchableOpacity onPress={()=>onRegisterPress(imageUri ?? '')} style={styles.button}>
           <Text style={styles.buttonText}>Register</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onVerifyPress} style={styles.button}>
+        <TouchableOpacity onPress={()=>onVerifyPress(imageUri ?? '')} style={styles.button}>
           <Text style={styles.buttonText}>Verify</Text>
         </TouchableOpacity>
       </View>
