@@ -45,9 +45,9 @@ export default function Navigation() {
             tabBarActiveTintColor: '#ffd700',
             tabBarInactiveTintColor: '#666',
             tabBarStyle: {
-              backgroundColor: '#0f0f23',
+              backgroundColor: '#0a0a0a',
               borderTopWidth: 1,
-              borderTopColor: 'rgba(255, 255, 255, 0.1)',
+              borderTopColor: '#0a0a0a',
               paddingBottom: 8,
               paddingTop: 8,
               height: 88,
