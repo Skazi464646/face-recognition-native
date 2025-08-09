@@ -43,7 +43,7 @@ const CameraScreen: React.FC = () => {
   };
 
   const handleVerifySuccess = () => {
-    handleRetakePhoto();
+    ;
   };
 
   const handleVerifyFailure = () => {
@@ -95,7 +95,6 @@ const CameraScreen: React.FC = () => {
   // Main camera screen
   return (
     <SafeAreaView style={componentStyles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <View style={componentStyles.cameraContainer}>
         {/* Camera View */}

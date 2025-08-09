@@ -1,31 +1,20 @@
 import React from 'react';
-import {
-  StatusBar,
-  StyleSheet,
-  useColorScheme,
-  View,
-  Text,
-  SafeAreaView,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  Dimensions,
-  Animated,
-  Platform,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useWalletPay } from './hooks/useWalletFunctions';
+import { StatusBar } from 'react-native';
 import Navigation from './src/Navigation';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-const {width} = Dimensions.get('window');
 
 export default function App() {
 
-return (
-  <Navigation/>
-)
-  
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <Navigation />
+      </SafeAreaView>
+    </SafeAreaProvider>
+  )
+
 }
 
 // ...styles and export unchanged...

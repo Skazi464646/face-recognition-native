@@ -23,7 +23,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Import custom components
-
 import ExchangeView from './ExchangeView';
 
 const HomeScreen: React.FC = () => {
@@ -92,117 +91,11 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView
       style={[
         styles.container,
-        { backgroundColor: isDarkMode ? '#1f2937' : '#f8fafc' }
       ]}
     >
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent
-      />
+  
+      <ExchangeView />
 
-      {/* Dark Background */}
-      <LinearGradient
-        colors={['#0f0f23', '#1a1a2e', '#16213e']}
-        style={styles.backgroundGradient}
-      />
-
-      {/* Crypto Exchange Header */}
-      <Animated.View style={[headerAnimatedStyle, { paddingTop: insets.top - 10 }]}>
-        <View style={styles.header}>
-          {/* Top Header Bar */}
-          <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.headerButton}>
-              <Icon name="menu" size={24} color="#fff" />
-            </TouchableOpacity>
-
-
-
-            {/* Segment Control */}
-            <View style={styles.segmentControl}>
-              <TouchableOpacity
-                style={[
-                  styles.segmentButton,
-                  selectedSegment === 'exchange' && styles.segmentButtonActive
-                ]}
-                onPress={() => handleSegmentChange('exchange')}
-              >
-                <Text style={[
-                  styles.segmentText,
-                  selectedSegment === 'exchange' && styles.segmentTextActive
-                ]}>
-                  Exchange
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.segmentButton,
-                  selectedSegment === 'wallet' && styles.segmentButtonActive
-                ]}
-                onPress={() => handleSegmentChange('wallet')}
-              >
-                <Text style={[
-                  styles.segmentText,
-                  selectedSegment === 'wallet' && styles.segmentTextActive
-                ]}>
-                  Wallet
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.headerRight}>
-
-              <TouchableOpacity style={styles.headerButton}>
-                <Icon name="person" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="#BTCUnbound"
-              placeholderTextColor="#666"
-            />
-            <TouchableOpacity style={styles.searchButton}>
-              <Icon name="search" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* Main Content with Flip Animation */}
-      <Animated.View style={[styles.contentContainer, contentAnimatedStyle]}>
-        {selectedSegment === 'exchange' ? (
-          <ExchangeView />
-        ) : (
-          <View style={styles.walletContainer}>
-            {/* Wallet Limit Card */}
-            <View style={styles.limitCard}>
-              <View style={styles.limitHeader}>
-                <Text style={styles.limitTitle}>Daily Limit</Text>
-                <Icon name="info" size={20} color="#ffd700" />
-              </View>
-              <Text style={styles.limitAmount}>$ 10,000</Text>
-              <View style={styles.limitProgress}>
-                <View style={styles.progressBar}>
-                  <View style={styles.progressFill} />
-                </View>
-                <Text style={styles.limitUsed}>$ 2,450 used today</Text>
-              </View>
-              <View style={styles.limitActions}>
-                <TouchableOpacity style={styles.limitButton}>
-                  <Text style={styles.limitButtonText}>Increase Limit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.limitButtonSecondary}>
-                  <Text style={styles.limitButtonTextSecondary}>View History</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -221,11 +114,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  contentContainer: {
-    paddingHorizontal: 10,
-    paddingBottom: 120,
-    paddingTop: 0,
-  },
+  // contentContainer: {
+  //   paddingHorizontal: 10,
+  //   paddingBottom: 120,
+  //   paddingTop: 0,
+  // },
   // Header Styles
   header: {
     paddingHorizontal: 16,
