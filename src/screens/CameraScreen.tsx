@@ -4,19 +4,18 @@ import { Camera } from 'react-native-vision-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 
-// Custom hooks
-import { useCamera } from '../hooks/useCamera';
-import { useFaceRecognition } from '../hooks/useFaceRecognition';
-import { useAnimations } from '../hooks/useAnimations';
-import { useFaceDetection } from '../hooks/useFaceDetection';
 
 // Components
-import {
-  PermissionScreen,
-  CameraOverlay,
-  PhotoPreview,
-  styles as componentStyles,
-} from '../components/camera';
+import PermissionScreen from '../components/camera/PermissionScreen';
+import CameraOverlay from '../components/camera/CameraOverlay';
+import PhotoPreview from '../components/camera/PhotoPreview';
+import { styles as componentStyles } from '../components/camera/styles';
+
+// Hooks
+import useCamera from '../hooks/useCamera';
+import useFaceRecognition from '../hooks/useFaceRecognition';
+import useFaceDetection from '../hooks/useFaceDetection';
+import useAnimations from '../hooks/useAnimations';
 
 const CameraScreen: React.FC = () => {
   // Custom hooks
@@ -28,8 +27,8 @@ const CameraScreen: React.FC = () => {
   // Memoized image URI
   const imageUri = useMemo(() => {
     if (!cameraHook.capturedPhoto) return null;
-    return cameraHook.capturedPhoto.startsWith('file://') 
-      ? cameraHook.capturedPhoto 
+    return cameraHook.capturedPhoto.startsWith('file://')
+      ? cameraHook.capturedPhoto
       : `file://${cameraHook.capturedPhoto}`;
   }, [cameraHook.capturedPhoto]);
 
@@ -97,7 +96,7 @@ const CameraScreen: React.FC = () => {
   return (
     <SafeAreaView style={componentStyles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
+
       <View style={componentStyles.cameraContainer}>
         {/* Camera View */}
         {cameraHook.device && (
