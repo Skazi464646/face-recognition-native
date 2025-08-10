@@ -64,7 +64,7 @@ export default function Navigation() {
         >
           <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen name="Markets" component={CameraScreen} />
-          <Tab.Screen name="Trade" component={ProfileScreen} />
+          <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

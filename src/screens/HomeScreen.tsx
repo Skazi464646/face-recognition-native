@@ -93,7 +93,6 @@ const HomeScreen: React.FC = () => {
         styles.container,
       ]}
     >
-  
       <ExchangeView />
 
     </SafeAreaView>

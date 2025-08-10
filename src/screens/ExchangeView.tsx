@@ -1,26 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  TextInput,
-  Alert,
-  SafeAreaView,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, TextInput, Alert, SafeAreaView, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolate,
-  runOnJS,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from 'react-native-reanimated';
+// styles are local in this file; shared styles used inside subcomponents
+import HeaderPrice from '../components/exchange/HeaderPrice';
+import ExpenseGraph from '../components/exchange/ExpenseGraph';
+import TransactionsList from '../components/exchange/TransactionsList';
+import WalletView from '../components/exchange/WalletView';
+import ToggleTabs from '../components/exchange/ToggleTabs';
+import TradingCard from '../components/exchange/TradingCard';
 
-const { width: screenWidth } = Dimensions.get('window');
 
 const ExchangeView: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -94,40 +84,11 @@ const ExchangeView: React.FC = () => {
     };
   });
 
-  // Toggle animated styles
-  const toggleIndicatorStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateX: interpolate(
-            togglePosition.value,
-            [0, 1],
-            [4, screenWidth / 2 - 2]
-          ),
-        },
-      ],
-    };
-  });
-
-  const exchangeTextStyle = useAnimatedStyle(() => {
-    return {
-      color: interpolate(
-        togglePosition.value,
-        [0, 1],
-        [1, 0.5]
-      ) === 1 ? '#ffd700' : '#999',
-    };
-  });
-
-  const walletTextStyle = useAnimatedStyle(() => {
-    return {
-      color: interpolate(
-        togglePosition.value,
-        [0, 1],
-        [0.5, 1]
-      ) === 1 ? '#ffd700' : '#999',
-    };
-  });
+  const onToggleSelect = (view: 'exchange' | 'wallet') => {
+    setToggleView(view);
+    // togglePosition.value = withTiming(view === 'exchange' ? 0 : 1, { duration: 300 });
+    animateToggle(view);
+  };
 
   // Trading functions
   const handleBuy = () => {
@@ -192,50 +153,11 @@ const ExchangeView: React.FC = () => {
   ];
 
   // Render expense graph
-  const renderExpenseGraph = () => {
-    const maxAmount = Math.max(...expenseData.map(d => d.amount));
+  const renderExpenseGraph = () => <ExpenseGraph data={expenseData} />;
 
-    return (
-      <View style={styles.graphContainer}>
-        <Text style={styles.graphTitle}>Monthly Expenses</Text>
-        <View style={styles.graphBars}>
-          {expenseData.map((item, index) => {
-            const height = (item.amount / maxAmount) * 120;
-            return (
-              <View key={index} style={styles.barContainer}>
-                <View style={[styles.bar, { height }]} />
-                <Text style={styles.barLabel}>{item.month}</Text>
-                <Text style={styles.barAmount}>${item.amount}</Text>
-              </View>
-            );
-          })}
-        </View>
-      </View>
-    );
-  };
-
-  // Render transaction cards
-  const renderTransactionCards = () => {
-    return (
-      <View style={styles.cardsContainer}>
-        <Text style={styles.cardsTitle}>Recent Transactions</Text>
-        {transactionCards.map((card) => (
-          <View key={card.id} style={styles.transactionCard}>
-            <View style={styles.cardLeft}>
-              <View style={[styles.cardIcon, { backgroundColor: getCardIconColor(card.type) }]}>
-                <Icon name={getCardIcon(card.type)} size={20} color="#fff" />
-              </View>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{card.title}</Text>
-                <Text style={styles.cardDate}>{card.date}</Text>
-              </View>
-            </View>
-            <Text style={styles.cardAmount}>-${card.amount}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
+  const renderTransactionCards = () => (
+    <TransactionsList cards={transactionCards} getCardIcon={getCardIcon} getCardIconColor={getCardIconColor} />
+  );
 
   // Helper functions for cards
   const getCardIcon = (type: string) => {
@@ -258,66 +180,7 @@ const ExchangeView: React.FC = () => {
     }
   };
 
-  // Render wallet view
-  const renderWalletView = () => {
-    return (
-      <View style={styles.walletContainer}>
-        <View style={styles.walletCard}>
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.walletGradient}
-          >
-            <View style={styles.walletHeader}>
-              <Text style={styles.walletTitle}>Total Balance</Text>
-              <Icon name="account-balance-wallet" size={24} color="#fff" />
-            </View>
-            <Text style={styles.walletAmount}>${walletData.totalBalance.toLocaleString()}</Text>
-            <Text style={styles.walletCurrency}>{walletData.currency}</Text>
-          </LinearGradient>
-        </View>
-
-        <View style={styles.todaySpentCard}>
-          <View style={styles.todaySpentHeader}>
-            <Text style={styles.todaySpentTitle}>Today's Spending</Text>
-            <Icon name="trending-up" size={20} color="#ff6b6b" />
-          </View>
-          <Text style={styles.todaySpentAmount}>${walletData.todaySpent}</Text>
-          <Text style={styles.todaySpentLabel}>Total spent today</Text>
-        </View>
-
-        <View style={styles.spendingBreakdown}>
-          <Text style={styles.breakdownTitle}>Spending Breakdown</Text>
-          <View style={styles.breakdownItem}>
-            <View style={styles.breakdownLeft}>
-              <View style={[styles.breakdownIcon, { backgroundColor: '#6366f1' }]}>
-                <Icon name="restaurant" size={16} color="#fff" />
-              </View>
-              <Text style={styles.breakdownText}>Food & Dining</Text>
-            </View>
-            <Text style={styles.breakdownAmount}>$89.45</Text>
-          </View>
-          <View style={styles.breakdownItem}>
-            <View style={styles.breakdownLeft}>
-              <View style={[styles.breakdownIcon, { backgroundColor: '#f59e0b' }]}>
-                <Icon name="directions-car" size={16} color="#fff" />
-              </View>
-              <Text style={styles.breakdownText}>Transportation</Text>
-            </View>
-            <Text style={styles.breakdownAmount}>$28.50</Text>
-          </View>
-          <View style={styles.breakdownItem}>
-            <View style={styles.breakdownLeft}>
-              <View style={[styles.breakdownIcon, { backgroundColor: '#10b981' }]}>
-                <Icon name="shopping-cart" size={16} color="#fff" />
-              </View>
-              <Text style={styles.breakdownText}>Shopping</Text>
-            </View>
-            <Text style={styles.breakdownAmount}>$127.35</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  const renderWalletView = () => <WalletView walletData={walletData} />;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -327,49 +190,13 @@ const ExchangeView: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Animated Toggle View */}
-        <View style={styles.toggleContainer}>
-          <View style={styles.toggleBackground}>
-            <Animated.View style={[styles.toggleIndicator, toggleIndicatorStyle]} />
-            <TouchableOpacity
-              style={styles.toggleViewButton}
-              onPress={() => animateToggle('exchange')}
-            >
-              <Animated.Text style={[styles.toggleViewText, exchangeTextStyle]}>
-                Exchange
-              </Animated.Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.toggleViewButton}
-              onPress={() => animateToggle('wallet')}
-            >
-              <Animated.Text style={[styles.toggleViewText, walletTextStyle]}>
-                Wallet
-              </Animated.Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ToggleTabs togglePosition={togglePosition} onSelect={onToggleSelect} />
 
         {/* Conditional Content Based on Toggle */}
         {toggleView === 'exchange' ? (
           <>
             {/* Header with Price Info */}
-            <View style={styles.header}>
-              <View style={styles.priceInfo}>
-                <Text style={styles.symbol}>BTC/USDT</Text>
-                <Text style={styles.price}>${mockPrice.toLocaleString()}</Text>
-                <Text style={[styles.change, mockChange >= 0 ? styles.positiveChange : styles.negativeChange]}>
-                  {mockChange >= 0 ? '+' : ''}{mockChange}%
-                </Text>
-              </View>
-              <View style={styles.headerActions}>
-                <TouchableOpacity style={styles.headerButton}>
-                  <Icon name="star-border" size={20} color="#ffd700" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.headerButton}>
-                  <Icon name="more-vert" size={20} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <HeaderPrice symbol={'BTC/USDT'} price={mockPrice} changePct={mockChange} />
 
             {/* Expense Graph */}
             {renderExpenseGraph()}
@@ -427,112 +254,18 @@ const ExchangeView: React.FC = () => {
           {/* Front of Card - Trading View */}
           <Animated.View style={[styles.card, styles.cardFront, frontAnimatedStyle]}>
             {activeView === 'trading' && (
-              <View style={styles.tradingView}>
-                {/* Buy Section */}
-                <View style={styles.tradeSection}>
-                  <View style={styles.tradeHeader}>
-                    <Text style={styles.tradeLabel}>Buy BTC</Text>
-                    <Text style={styles.availableBalance}>Available: 1,234.56 USDT</Text>
-                  </View>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.amountInput}
-                      placeholder="0.00"
-                      placeholderTextColor="#666"
-                      value={buyAmount}
-                      onChangeText={setBuyAmount}
-                      keyboardType="numeric"
-                    />
-                    <TouchableOpacity style={styles.currencyButton}>
-                      <Text style={styles.currencyButtonText}>USDT</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Percentage Buttons */}
-                  <View style={styles.percentageButtons}>
-                    {[25, 50, 75, 100].map((percentage) => (
-                      <TouchableOpacity
-                        key={percentage}
-                        style={[
-                          styles.percentageButton,
-                          buyPercentage === percentage && styles.percentageButtonActive
-                        ]}
-                        onPress={() => handleBuyPercentage(percentage)}
-                      >
-                        <Text style={[
-                          styles.percentageButtonText,
-                          buyPercentage === percentage && styles.percentageButtonTextActive
-                        ]}>
-                          {percentage}%
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <TouchableOpacity style={styles.buyButton} onPress={handleBuy}>
-                    <LinearGradient
-                      colors={['#00d4aa', '#00b894']}
-                      style={styles.buyGradient}
-                    >
-                      <Text style={styles.buyButtonText}>Buy BTC</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Divider */}
-                <View style={styles.divider} />
-
-                {/* Sell Section */}
-                <View style={styles.tradeSection}>
-                  <View style={styles.tradeHeader}>
-                    <Text style={styles.tradeLabel}>Sell BTC</Text>
-                    <Text style={styles.availableBalance}>Available: 0.00155824 BTC</Text>
-                  </View>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.amountInput}
-                      placeholder="0.00"
-                      placeholderTextColor="#666"
-                      value={sellAmount}
-                      onChangeText={setSellAmount}
-                      keyboardType="numeric"
-                    />
-                    <TouchableOpacity style={styles.currencyButton}>
-                      <Text style={styles.currencyButtonText}>BTC</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Percentage Buttons */}
-                  <View style={styles.percentageButtons}>
-                    {[25, 50, 75, 100].map((percentage) => (
-                      <TouchableOpacity
-                        key={percentage}
-                        style={[
-                          styles.percentageButton,
-                          sellPercentage === percentage && styles.percentageButtonActiveSell
-                        ]}
-                        onPress={() => handleSellPercentage(percentage)}
-                      >
-                        <Text style={[
-                          styles.percentageButtonText,
-                          sellPercentage === percentage && styles.percentageButtonTextActiveSell
-                        ]}>
-                          {percentage}%
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <TouchableOpacity style={styles.sellButton} onPress={handleSell}>
-                    <LinearGradient
-                      colors={['#ff6b6b', '#ee5a52']}
-                      style={styles.sellGradient}
-                    >
-                      <Text style={styles.sellButtonText}>Sell BTC</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <TradingCard
+                buyAmount={buyAmount}
+                sellAmount={sellAmount}
+                buyPercentage={buyPercentage}
+                sellPercentage={sellPercentage}
+                onChangeBuy={setBuyAmount}
+                onChangeSell={setSellAmount}
+                onBuyPct={handleBuyPercentage}
+                onSellPct={handleSellPercentage}
+                onBuy={handleBuy}
+                onSell={handleSell}
+              />
             )}
 
             {activeView === 'portfolio' && (
