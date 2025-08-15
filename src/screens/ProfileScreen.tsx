@@ -105,7 +105,7 @@ const ProfileScreen = () => {
               <Icon name="person" size={28} color="#fff" />
             </Animated.View>
             <Animated.View style={[styles.nameBlock, nameBlockStyle]}>
-              <Text style={styles.name}>Alex Johnson</Text>
+              <Text style={styles.name}>Shantanu Bhosale</Text>
               <Text style={styles.subtitle}>ID: 9Z3-21A-7FQ</Text>
             </Animated.View>
             <TouchableOpacity style={[styles.editBtn,editBtnAnimate]} onPress={() => Alert.alert('Edit Profile')}>
